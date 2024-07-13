@@ -1,0 +1,45 @@
+{
+  
+  "dependencies": {
+  
+    
+  "antibotbrowser": "^1.0.5",
+  
+    
+  "dotenv": "^16.4.5",
+  
+    
+  "https-proxy-agent": "^7.0.5",
+  
+    
+  "lodash": "^4.17.21",
+  
+    
+  "mysql": "^2.18.1",
+  
+    
+  "puppeteer": "^22.12.1",
+  
+    
+  "puppeteer-autoscroll-down": "^2.0.0",
+  
+    
+  "puppeteer-extra": "^3.3.6",
+  
+    
+  "puppeteer-extra-plugin-adblocker": "^2.13.6",
+  
+    
+  "puppeteer-extra-plugin-stealth": "^2.11.2",
+  
+    
+  "puppeteer-real-browser": "^1.2.20",
+  
+    
+  "random-useragent": "^0.5.0",
+  
+    
+  "user-agents": "^1.1.255"
+  
+  }
+}
