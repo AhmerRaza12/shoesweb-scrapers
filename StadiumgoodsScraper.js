@@ -33,8 +33,8 @@ const insertProductsIntoDatabase = (products) => {
     connection.connect();
 
     const query = `
-        INSERT INTO stadiumgoods_data (product_name, product_price, pruduct_url, product_img, product_website, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO stadiumgoods_data (product_name, product_price, pruduct_url, product_img, product_website)
+        VALUES (?, ?, ?, ?, ?)
     `;
 
     products.forEach(product => {
@@ -44,7 +44,6 @@ const insertProductsIntoDatabase = (products) => {
             product.link,
             product.image,
             product.website,
-            new Date()
         ], (error, results, fields) => {
             if (error) {
                 console.error('Error inserting data:', error);
@@ -57,19 +56,54 @@ const insertProductsIntoDatabase = (products) => {
     connection.end();
 };
 
+const scrollToEndOfPage = async (page) => {
+    await page.evaluate(async () => {
+        await new Promise((resolve) => {
+            let totalHeight = 0;
+            const distance = 100;
+            const timer = setInterval(() => {
+                const scrollHeight = document.body.scrollHeight;
+                window.scrollBy(0, distance);
+                totalHeight += distance;
+
+                if (totalHeight >= scrollHeight) {
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, 100);
+        });
+    });
+};
+
+const scrapeImages = async (page) => {
+    await scrollToEndOfPage(page);
+
+    const images = await page.evaluate(() => {
+        const imageElements = document.querySelectorAll("article[data-test='productCard'] img");
+        const imageList = [];
+        imageElements.forEach(imageElement => {
+            const srcset = imageElement.getAttribute('srcset');
+            const imageUrl = srcset ? srcset.split(', ')[1].split(' ')[0] : imageElement.src;
+            imageList.push(imageUrl);
+        });
+
+        return imageList;
+    });
+
+    return images;
+};
+
 (async () => {
     const browser = await puppeteer.launch({ headless: false, args: ['--window-size=1800,1200'] });
     const page = await browser.newPage();
     await page.setDefaultNavigationTimeout(0);
 
     for (const url of urls) {
-        console.log(`Navigating to: ${url}`);
         await page.goto(url, { waitUntil: "domcontentloaded" });
         let currentPage = 1;
         const maxPages = 5;
 
         while (currentPage <= maxPages) {
-            console.log(`Scraping page ${currentPage}`);
             await page.waitForSelector('div.eh9rc8u2.css-1bjpnpj.egx6e7n0'); 
 
             const products = await page.evaluate(() => {
@@ -111,6 +145,13 @@ const insertProductsIntoDatabase = (products) => {
 
                 return productsArray;
             });
+
+            const images = await scrapeImages(page);
+            for (let i = 0; i < products.length; i++) {
+                if (products[i].image === "No Image" && images[i]) {
+                    products[i].image = images[i];
+                }
+            }
 
             products.forEach((product) => {
                 console.log('Product:', product);
